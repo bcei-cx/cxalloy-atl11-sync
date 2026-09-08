@@ -624,7 +624,7 @@ function normalizeVendor(v){
 /** Compute achievement, current level, variance and per-level classification. */
 function transform(rows){
   rows.forEach(r=>{
-    LK.forEach(k=>{
+    LK.forEach((k,i)=>{
       const t = r.tags[k];
       t.achieved = (!!t.act || (r.statusLevel||0) >= i+1) && !t.skipped;                 // skipped never counts as achieved
       t.variance = (t.act && t.proj) ? dayDiff(t.act, t.proj) : null;
@@ -1840,8 +1840,9 @@ async function loadHostedData(){
   try{
     const equipmentRes = await fetch(HOSTED_DATA.equipmentUrl, {cache:'no-store'});
     if(!equipmentRes.ok) throw new Error('Equipment CSV returned HTTP '+equipmentRes.status);
+    const csvText = await equipmentRes.text();
     const equipment = await new Promise((resolve,reject)=>{
-      Papa.parse(await equipmentRes.text(),{
+      Papa.parse(csvText,{
         header:true, skipEmptyLines:'greedy',
         complete:res=>resolve(res.data), error:reject
       });
