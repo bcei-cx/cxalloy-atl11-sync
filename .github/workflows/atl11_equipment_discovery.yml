@@ -1,0 +1,35 @@
+name: ATL11 CxAlloy Equipment Discovery
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependency
+        run: pip install requests
+
+      - name: Extract ATL11 equipment and discover fields
+        env:
+          CXALLOY_IDENTIFIER: ${{ secrets.CXALLOY_IDENTIFIER }}
+          CXALLOY_SECRET: ${{ secrets.CXALLOY_SECRET }}
+          CXALLOY_PROJECT_ID: ${{ vars.CXALLOY_PROJECT_ID }}
+        run: python cxalloy_equipment_discovery.py
+
+      - name: Commit discovery output
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Extract ATL11 equipment fields"
+          file_pattern: 'data/equipment_status.csv'
