@@ -77,6 +77,27 @@ STAGE_INDEX = {stage: i for i, stage in enumerate(TAG_STAGES)}
 # Keyed by UPPERCASE so the match works regardless of how CxAlloy actually
 # capitalizes status text (seen as all-caps in practice, e.g. "L1 RED TAG").
 LABEL_TO_STAGE = {label.upper(): stage for stage, label in TAG_STAGE_LABELS.items()}
+LABEL_TO_STAGE.update({
+    "NOT INSTALLED": "no_tag",
+    "CX LVL 1 COMPLETE": "l1_red_tag",
+    "CX LVL 2 COMPLETE": "l2_yellow_tag",
+    "CX LVL 3 COMPLETE": "l3_green_tag",
+    "CX LVL 4 COMPLETE": "l4_blue_tag",
+    "CX LVL 5 COMPLETE": "l5_white_tag",
+})
+
+# ATL11 uses Cx level completion names while the dashboard retains the
+# familiar commissioning tag labels.
+STAGE_SOURCE_ALIASES = {
+    "no_tag": ["no_tag", "not_installed"],
+    "l1_red_tag": ["l1_red_tag", "cx_lvl_1_complete"],
+    "conditional_yellow_tag": ["conditional_yellow_tag"],
+    "l2_yellow_tag": ["l2_yellow_tag", "cx_lvl_2_complete"],
+    "energized": ["energized"],
+    "l3_green_tag": ["l3_green_tag", "cx_lvl_3_complete"],
+    "l4_blue_tag": ["l4_blue_tag", "cx_lvl_4_complete"],
+    "l5_white_tag": ["l5_white_tag", "cx_lvl_5_complete"],
+}
 
 
 def _latest_entry(date_str: str, person_str: str):
@@ -138,8 +159,15 @@ def flatten_extended_status(extended_status) -> dict:
 
     if isinstance(extended_status, dict):
         for stage in TAG_STAGES:
-            raw_date = extended_status.get(f"{stage}_date", "") or ""
-            raw_person = extended_status.get(f"{stage}_person", "") or ""
+            raw_date = ""
+            raw_person = ""
+            for source_stage in STAGE_SOURCE_ALIASES.get(stage, [stage]):
+                candidate_date = extended_status.get(f"{source_stage}_date", "") or ""
+                candidate_person = extended_status.get(f"{source_stage}_person", "") or ""
+                if candidate_date:
+                    raw_date = candidate_date
+                    raw_person = candidate_person
+                    break
             latest_date, latest_person = _latest_entry(raw_date, raw_person)
 
             flat[f"{stage}_date"] = latest_date
