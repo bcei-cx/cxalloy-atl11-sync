@@ -380,6 +380,19 @@ def main():
     unmatched_system_shapes = set()
     unmatched_attribute_shapes = set()
 
+    # Schema-only discovery: report ATL11 extended_status keys without
+    # publishing values that may contain names or other project details.
+    extended_status_schema = {}
+    for eq in all_equipment:
+        raw = eq.get("extended_status")
+        if not isinstance(raw, dict):
+            continue
+        for key, value in raw.items():
+            extended_status_schema.setdefault(str(key), set()).add(type(value).__name__)
+    print("ATL11 extended_status schema (field names and value types only):")
+    for key in sorted(extended_status_schema):
+        print(f"  {key}: {sorted(extended_status_schema[key])}")
+
     # Flatten every equipment's attributes up front so we know the full set
     # of attribute columns before writing the CSV header.
     flat_attributes_by_record = []
